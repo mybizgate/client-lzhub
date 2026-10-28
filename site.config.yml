@@ -1,4 +1,7 @@
 # MyBizGate site configuration. The slug is the permanent identity; the domain may change later.
+# NOTE: this site is a Vue 3 + Vite app. Production is built with `npm run build` by
+# .github/workflows/deploy.yml; the platform `build:` keys below are not used by that build.
+# The frontend's own copy of these business facts lives in src/config/clients/lzhub.ts.
 client:
   name: Lz Success Enterprise
   slug: lzhub

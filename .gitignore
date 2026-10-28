@@ -1,14 +1,22 @@
-# Production artifacts are built by the MyBizGate platform; never commit them.
+# Production artifacts are built by `npm run build`; never commit them.
 dist/
 node_modules/
+.env.local
+.env.*.local
 .mybizgate/
 .mybizgate.local.yml
 .mybizgate-build-report.json
 .lighthouse/
 .screenshots/
 .ftp-deploy-sync-state.json
-.env
-.env.*
 *.log
 .DS_Store
 Thumbs.db
+*.tsbuildinfo
+
+# Tooling caches and local editor/agent settings
+.vite/
+coverage/
+.idea/
+.vscode/
+.claude/*.local.json

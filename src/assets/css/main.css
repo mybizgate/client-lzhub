@@ -1,0 +1,169 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Fallback palette; the client store overwrites these from ClientConfig.branding. */
+    --c-brand: 23 111 81;
+    --c-brand-dark: 16 76 59;
+    --c-brand-soft: 233 243 236;
+    --c-accent: 237 186 99;
+    --c-hero-from: 17 85 62;
+    --c-hero-to: 32 110 78;
+  }
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 100px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-page text-ink font-sans text-[14px] leading-normal antialiased;
+  }
+  button {
+    touch-action: manipulation;
+  }
+  button:disabled {
+    @apply cursor-not-allowed opacity-45;
+  }
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    @apply outline outline-[3px] outline-offset-2 outline-[#d39535];
+  }
+  svg {
+    @apply shrink-0;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      scroll-behavior: auto !important;
+      transition: none !important;
+      animation: none !important;
+    }
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-[11px] border-0 px-[18px] py-3 text-[12px] font-extrabold transition-colors;
+  }
+  .btn svg {
+    @apply h-4 w-4;
+  }
+  .btn-primary {
+    @apply btn bg-brand text-white hover:bg-brand-dark;
+  }
+  .btn-secondary {
+    @apply btn bg-brand-soft text-brand hover:bg-brand/15;
+  }
+  .btn-ghost {
+    @apply btn border border-line bg-white text-ink hover:bg-page;
+  }
+  .btn-white {
+    @apply btn bg-white text-brand-dark hover:bg-brand-soft;
+  }
+  .btn-link {
+    @apply inline-flex items-center gap-2 border-0 bg-transparent text-[12px] font-extrabold text-brand;
+  }
+  .icon-btn {
+    @apply relative grid h-[43px] w-[43px] place-items-center rounded-xl border border-line bg-white text-ink;
+  }
+  .panel {
+    @apply rounded-[17px] border border-line bg-white p-[21px] md:p-6;
+  }
+  .eyebrow {
+    @apply mb-2 text-[9px] font-extrabold uppercase tracking-[1.7px] text-brand;
+  }
+  .hint {
+    @apply text-[11px] leading-[1.7] text-[#71806b];
+  }
+  .field {
+    @apply mb-4 flex flex-col gap-[7px];
+  }
+  .field label {
+    @apply text-[12px] font-extrabold;
+  }
+  .field input,
+  .field select,
+  .field textarea {
+    @apply w-full min-h-[46px] rounded-[10px] border border-line bg-white px-3 py-[11px] text-[16px] text-ink shadow-none focus:border-brand focus:ring-0 md:min-h-[44px] md:text-[14px];
+  }
+  .field textarea {
+    @apply min-h-[95px] resize-y;
+  }
+  .field input::placeholder,
+  .field textarea::placeholder {
+    @apply text-[13px] text-muted/80;
+  }
+  .chip {
+    @apply min-h-[42px] whitespace-nowrap rounded-[10px] border border-line bg-white px-[14px] py-[10px] text-[11px] font-bold text-[#62785f];
+  }
+  .chip-active {
+    @apply border-brand bg-brand text-white;
+  }
+  .status {
+    @apply inline-block whitespace-nowrap rounded-full px-[10px] py-[6px] text-[10px] font-black leading-[1.5];
+  }
+  .validation-error {
+    @apply my-3 rounded-[10px] border border-[#edc8bf] bg-[#fff4ef] px-[14px] py-3 text-[12px] leading-[1.7] text-[#9f4c38];
+  }
+  .check-label {
+    @apply my-[13px] flex min-h-[35px] cursor-pointer items-start gap-[10px] text-[12px] leading-[1.7];
+  }
+  .check-label input {
+    @apply mt-[2px] h-[18px] w-[18px] shrink-0 rounded border-line text-brand focus:ring-0;
+  }
+  .totals {
+    @apply flex justify-between py-[7px] text-[12px];
+  }
+  .totals-big {
+    @apply mt-[10px] border-t border-line py-[15px] text-[17px] font-black tracking-[-.3px];
+  }
+  /* Catalogue packshot stage: subtle warm backgrounds alternate per card like the original. */
+  .product-stage {
+    background: radial-gradient(ellipse at 50% 45%, #fffefa 0%, #f4f0e4 88%);
+  }
+  .product-card:nth-child(4n + 2) .product-stage {
+    background: radial-gradient(ellipse at 50% 45%, #fffefa 0%, #f1eee6 88%);
+  }
+  .product-card:nth-child(4n + 3) .product-stage {
+    background: radial-gradient(ellipse at 50% 45%, #fffefa 0%, #f2ebd9 88%);
+  }
+  .product-card:nth-child(4n + 4) .product-stage {
+    background: radial-gradient(ellipse at 50% 45%, #fffefa 0%, #edf0e5 88%);
+  }
+  .hero-rings::before,
+  .hero-rings::after {
+    content: '';
+    position: absolute;
+    border-radius: 9999px;
+    border: 1px solid rgb(255 255 255 / 0.09);
+    pointer-events: none;
+  }
+  .hero-rings::before {
+    width: 500px;
+    height: 500px;
+    right: -75px;
+    top: -165px;
+  }
+  .hero-rings::after {
+    width: 360px;
+    height: 360px;
+    right: -8px;
+    top: -90px;
+  }
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #cfddd1 transparent;
+  }
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+}
