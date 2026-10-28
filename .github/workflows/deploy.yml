@@ -39,15 +39,22 @@ jobs:
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
 
-      - name: Validate deployment target
+      - name: Resolve deployment target
+        id: target
         env:
           DEPLOY_DIR: ${{ vars.DEPLOY_DIR }}
         run: |
           if [ -z "$DEPLOY_DIR" ]; then echo "DEPLOY_DIR variable is not set"; exit 1; fi
           case "$DEPLOY_DIR" in
-            public_html/clients/*/) echo "Deploying to $DEPLOY_DIR" ;;
+            public_html/clients/*/) ;;
             *) echo "Clients may only deploy under public_html/clients/<slug>/ (got: $DEPLOY_DIR)"; exit 1 ;;
           esac
+          # Same rule as the platform's resolveServerDir(): a dedicated FTP account is already
+          # rooted at DEPLOY_DIR, so upload to "./"; a shared account needs the full path.
+          FTP_ACCOUNT=$(sed -nE 's/^[[:space:]]*ftp_account:[[:space:]]*([a-z]+).*/\1/p' site.config.yml | head -1)
+          if [ "$FTP_ACCOUNT" = "dedicated" ]; then SERVER_DIR="./"; else SERVER_DIR="$DEPLOY_DIR"; fi
+          echo "ftp_account=$FTP_ACCOUNT  deploy_dir=$DEPLOY_DIR  server_dir=$SERVER_DIR"
+          echo "server_dir=$SERVER_DIR" >> "$GITHUB_OUTPUT"
 
       - name: Build production dist/
         env:
@@ -73,7 +80,7 @@ jobs:
           protocol: ftps
           port: 21
           local-dir: ./dist/
-          server-dir: ${{ vars.DEPLOY_DIR }}
+          server-dir: ${{ steps.target.outputs.server_dir }}
           dangerous-clean-slate: false
           exclude: |
             **/.git*
@@ -85,11 +92,17 @@ jobs:
           SITE_DOMAIN: ${{ vars.SITE_DOMAIN }}
           SITE_NAME: ${{ vars.SITE_NAME }}
         run: |
+          # Require the built Vue shell (hashed asset + app root) and the site identity, so a stale
+          # page that merely mentions the business name cannot pass.
+          ASSET=$(grep -oE 'assets/index-[A-Za-z0-9_-]+\.js' dist/index.html | head -1)
           for i in $(seq 1 20); do
-            if curl -fsSL "https://$SITE_DOMAIN/" | grep -q "$SITE_NAME"; then echo "Live: https://$SITE_DOMAIN/"; exit 0; fi
+            HTML=$(curl -fsSL "https://$SITE_DOMAIN/?nocache=$i" || true)
+            if echo "$HTML" | grep -q 'id="app"' && echo "$HTML" | grep -q "$ASSET" && echo "$HTML" | grep -q "$SITE_NAME"; then
+              echo "Live: https://$SITE_DOMAIN/ serving $ASSET"; exit 0
+            fi
             sleep 15
           done
-          echo "Site did not respond with the expected identity within 5 minutes"; exit 1
+          echo "Site did not serve the new build ($ASSET) within 5 minutes"; exit 1
 
       - name: Tag release
         if: success()
