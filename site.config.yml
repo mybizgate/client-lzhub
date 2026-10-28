@@ -1,0 +1,42 @@
+# MyBizGate site configuration. The slug is the permanent identity; the domain may change later.
+client:
+  name: Lz Success Enterprise
+  slug: lzhub
+template:
+  id: supplier/catalogue-simple
+  version: null
+platform_ref: v1.3.0
+domain:
+  type: subdomain
+  primary: lzhub.mybizgate.com
+business:
+  whatsapp: '+60192857371'
+  email: lzsuccess007@gmail.com
+  address: 27 Jalan Melati 13, Taman Melati, 53100 Kuala Lumpur
+  phone: '+60173050885'
+  opening_hours: 8am - 6pm
+  short_name: Lz Success Ent.
+  locality: Kuala Lumpur
+hosting:
+  deploy_dir: public_html/clients/lzhub/
+  ftp_account: dedicated
+site:
+  kind: client
+  environment: production
+  production_url: https://lzhub.mybizgate.com
+  identity: Lz Success Enterprise
+build:
+  exclude: []
+  images:
+    convert: true
+    quality: 82
+    max_width: 1920
+    preserve: []
+  cache_bust: true
+qa:
+  lighthouse: false
+  browser_smoke: false
+  screenshots: false
+github:
+  repo: client-lzhub
+  visibility: private
