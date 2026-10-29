@@ -60,7 +60,7 @@ jobs:
         env:
           # Build-time configuration. VITE_* values are public; never put secrets here.
           VITE_CLIENT_CODE: ${{ vars.VITE_CLIENT_CODE || 'lzhub' }}
-          VITE_DATA_MODE: ${{ vars.VITE_DATA_MODE || 'local' }}
+          VITE_DATA_MODE: ${{ vars.VITE_DATA_MODE || 'api' }}
           VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL || 'https://client-api.mybizgate.com/api/v1' }}
           VITE_MEDIA_API_BASE_URL: ${{ vars.VITE_MEDIA_API_BASE_URL || 'https://media-api.mybizgate.com/api/v1' }}
           VITE_SITE_URL: ${{ vars.VITE_SITE_URL || (vars.SITE_DOMAIN && format('https://{0}', vars.SITE_DOMAIN)) || 'https://lzhub.mybizgate.com' }}
