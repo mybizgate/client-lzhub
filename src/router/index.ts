@@ -14,6 +14,11 @@ export const router = createRouter({
     { path: '/orders', name: 'orders', component: () => import('../views/OrdersView.vue') },
     { path: '/orders/:id', name: 'order', component: () => import('../views/OrderDetailView.vue') },
     { path: '/account', name: 'account', component: () => import('../views/AccountView.vue') },
+    {
+      path: '/api-test',
+      name: 'api-test',
+      component: () => import('@/views/ApiTestView.vue'),
+    },
     { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('../views/NotFoundView.vue') },
   ],
   scrollBehavior(to, from, saved) {
