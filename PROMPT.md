@@ -58,10 +58,11 @@ Production frontend:
 https://lzhub.mybizgate.com/
 ```
 
-Future shared backend:
+Shared backends:
 
 ```text
-https://api-client.mybizgate.com/
+https://client-api.mybizgate.com/   business data
+https://media-api.mybizgate.com/    files and images
 ```
 
 The frontend and backend use the same parent domain but different subdomains.
@@ -192,7 +193,8 @@ VITE_DATA_MODE=api
 API URL:
 
 ```env
-VITE_API_BASE_URL=https://api-client.mybizgate.com/api/v1
+VITE_API_BASE_URL=https://client-api.mybizgate.com/api/v1
+VITE_MEDIA_API_BASE_URL=https://media-api.mybizgate.com/api/v1
 ```
 
 Do NOT build the real Laravel backend yet.
@@ -355,7 +357,8 @@ Create:
 ```env
 VITE_CLIENT_CODE=lzhub
 VITE_DATA_MODE=local
-VITE_API_BASE_URL=https://api-client.mybizgate.com/api/v1
+VITE_API_BASE_URL=https://client-api.mybizgate.com/api/v1
+VITE_MEDIA_API_BASE_URL=https://media-api.mybizgate.com/api/v1
 ```
 
 Provide:
@@ -399,7 +402,7 @@ Future backend:
 ```text
 Laravel
 MariaDB
-api-client.mybizgate.com
+client-api.mybizgate.com
 ```
 
 The implementation should support adding:
@@ -751,7 +754,7 @@ Vue 3
         ↓
 REST API
         ↓
-api-client.mybizgate.com
+client-api.mybizgate.com
         ↓
 Laravel
         ↓
@@ -773,7 +776,7 @@ https://lzhub.mybizgate.com
 and:
 
 ```text
-https://api-client.mybizgate.com
+https://client-api.mybizgate.com
 ```
 
 are separate origins, the future Laravel backend will require correct CORS configuration.
@@ -898,7 +901,7 @@ Prototype mode must work completely without Laravel.
 The frontend must also be architecturally ready to connect to:
 
 ```text
-https://api-client.mybizgate.com/
+https://client-api.mybizgate.com/
 ```
 
 when the Laravel + MariaDB backend is developed in the next stage.

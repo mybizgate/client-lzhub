@@ -38,7 +38,8 @@ Copy `.env.example` to `.env.local` for personal overrides. Committed files:
 | --- | --- |
 | `VITE_CLIENT_CODE` | which client config to build (`lzhub`) |
 | `VITE_DATA_MODE` | `local` (prototype, default) or `api` (future Laravel backend) |
-| `VITE_API_BASE_URL` | REST base URL for API mode, e.g. `https://api-client.mybizgate.com/api/v1` |
+| `VITE_API_BASE_URL` | client-api base URL for business data, e.g. `https://client-api.mybizgate.com/api/v1` |
+| `VITE_MEDIA_API_BASE_URL` | media-api base URL for file/image uploads, e.g. `https://media-api.mybizgate.com/api/v1` |
 | `VITE_SITE_URL` | canonical site URL used for Open Graph / canonical tags |
 
 `VITE_*` values are compiled into the public bundle. Never put secrets in them.
@@ -133,7 +134,8 @@ Target architecture:
 ```
 lzhub.mybizgate.com (Vue 3, static dist/)
         ↓ REST, X-Client-Code: lzhub
-api-client.mybizgate.com (Laravel) → MariaDB
+        ├─ client-api.mybizgate.com (Laravel) → MariaDB            business data
+        └─ media-api.mybizgate.com  (Laravel) → tenant file storage files and images
 ```
 
 Backend requirements to keep in mind:

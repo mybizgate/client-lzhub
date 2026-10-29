@@ -62,13 +62,19 @@ jobs:
           VITE_CLIENT_CODE: ${{ vars.VITE_CLIENT_CODE || 'lzhub' }}
           VITE_DATA_MODE: ${{ vars.VITE_DATA_MODE || 'local' }}
           VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL || 'https://client-api.mybizgate.com/api/v1' }}
-          VITE_SITE_URL: https://${{ vars.SITE_DOMAIN }}
+          VITE_MEDIA_API_BASE_URL: ${{ vars.VITE_MEDIA_API_BASE_URL || 'https://media-api.mybizgate.com/api/v1' }}
+          VITE_SITE_URL: ${{ vars.VITE_SITE_URL || (vars.SITE_DOMAIN && format('https://{0}', vars.SITE_DOMAIN)) || 'https://lzhub.mybizgate.com' }}
         run: npm run build
 
       - name: Check dist
         run: |
           test -f dist/index.html
           test -f dist/.htaccess
+          # The bundle must reference the two production APIs and no retired hostname.
+          grep -rq 'client-api.mybizgate.com/api/v1' dist/assets
+          grep -rq 'media-api.mybizgate.com/api/v1' dist/assets
+          RETIRED_HOST="api-client"   # old hostname, must never reappear
+          ! grep -rq "${RETIRED_HOST}.mybizgate.com" dist
           ls -la dist dist/assets | head -40
 
       - name: Deploy dist/ via FTPS

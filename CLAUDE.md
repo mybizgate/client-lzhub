@@ -41,7 +41,9 @@ not the platform's `mybizgate build` command, which does not understand Vite pro
   submitted as `OrderDraft` and returned priced as `Order`.
 - **Keep the frontend deployable as static files** on shared hosting: no SSR, no Node runtime in
   production, history-mode routing relies on `public/.htaccess`.
-- Do not hard-code API URLs; use `src/config/env.ts`.
+- Do not hard-code API URLs; use `src/config/env.ts`. Business data uses `VITE_API_BASE_URL`
+  (client-api); files and images use `VITE_MEDIA_API_BASE_URL` (media-api) through
+  `src/services/media.service.ts`. Never send uploads to client-api.
 - `X-Client-Code` is an identifier only. Never treat it as authorisation.
 
 ## Where things live
@@ -54,6 +56,8 @@ not the platform's `mybizgate build` command, which does not understand Vite pro
 - `src/components/catalogue|cart|checkout|orders|common/` – feature components. `AppIcon` holds
   the inline SVG set; `ProductArt` renders a photo or the generated packshot from
   `src/utils/packshot.ts` when `product.images` is empty.
+- `src/services/media.service.ts` – Media API client (upload, replace, metadata, download, delete,
+  list); `src/views/ApiTestView.vue` (`/api-test`) is the development test page for it.
 - `src/services/pricing.ts` – quantity-tier unit price, delivery fee, availability helpers.
 - `src/services/whatsapp-message.ts` – order/enquiry message text; `src/utils/whatsapp.ts` encodes
   the `wa.me` URL.
