@@ -45,7 +45,8 @@ const rows: Row[] = [
   ['Bawang Goreng', 'BAWANG GORENG', 'kering', 'karton', 12, '500g', 9600, 8, 1, 0, 'jar', '#a8743c', 'onion'],
 ]
 
-export function stockStatusFor(stock: number, min: number): StockStatus {
+export function stockStatusFor(stock: number | null, min: number): StockStatus {
+  if (stock === null) return 'in_stock'
   if (stock < min) return 'out'
   if (stock < 10) return 'low'
   return 'in_stock'

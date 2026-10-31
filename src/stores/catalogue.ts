@@ -1,8 +1,9 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import type { Category } from '../types/category'
-import type { Product } from '../types/product'
+import type { ManagedProduct, Product } from '../types/product'
 import { catalogueService } from '../services/catalogue.service'
+import { manageService } from '../services/manage.service'
 import { usePersistedRef, isStringArray } from './persist'
 
 type Status = 'idle' | 'loading' | 'ready' | 'error'
@@ -10,6 +11,7 @@ type Status = 'idle' | 'loading' | 'ready' | 'error'
 export const useCatalogueStore = defineStore('catalogue', () => {
   const categories = ref<Category[]>([])
   const products = ref<Product[]>([])
+  const manageableProducts = ref<ManagedProduct[]>([])
   const status = ref<Status>('idle')
   const error = ref('')
   const favorites = usePersistedRef<string[]>('favorites', () => [], isStringArray)
@@ -47,6 +49,28 @@ export const useCatalogueStore = defineStore('catalogue', () => {
     return p
   }
 
+  async function loadManageable(): Promise<void> {
+    manageableProducts.value = await manageService.products()
+  }
+
+  function upsertProduct(product: Product): void {
+    const index = products.value.findIndex((item) => item.id === product.id)
+    if (index >= 0) products.value[index] = product
+    else products.value.push(product)
+    if ('status' in product) {
+      const managed = product as ManagedProduct
+      const managedIndex = manageableProducts.value.findIndex((item) => item.id === managed.id)
+      if (managedIndex >= 0) manageableProducts.value[managedIndex] = managed
+      else manageableProducts.value.push(managed)
+    }
+  }
+
+  function addCategory(category: Category): void {
+    const index = categories.value.findIndex((item) => item.id === category.id)
+    if (index >= 0) categories.value[index] = category
+    else categories.value.push(category)
+  }
+
   function product(id: string) {
     return byId.value.get(id)
   }
@@ -74,6 +98,7 @@ export const useCatalogueStore = defineStore('catalogue', () => {
   return {
     categories,
     products,
+    manageableProducts,
     status,
     error,
     favorites,
@@ -88,6 +113,9 @@ export const useCatalogueStore = defineStore('catalogue', () => {
     featured,
     load,
     loadProduct,
+    loadManageable,
+    upsertProduct,
+    addCategory,
     product,
     categoryName,
     sampleFor,

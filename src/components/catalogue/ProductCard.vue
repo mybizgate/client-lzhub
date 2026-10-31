@@ -1,19 +1,22 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { Product } from '../../types/product'
+import type { ManagedProduct, Product } from '../../types/product'
 import AppIcon from '../common/AppIcon.vue'
 import ProductArt from '../common/ProductArt.vue'
 import QtyControl from '../common/QtyControl.vue'
 import { useCatalogueStore } from '../../stores/catalogue'
 import { useCartStore } from '../../stores/cart'
 import { useUiStore } from '../../stores/ui'
+import { useAuthStore } from '../../stores/auth'
 import { useClient } from '../../composables/useClient'
-import { unitPrice, discountPercent, packDescription, isAvailable } from '../../services/pricing'
+import { unitPrice, discountPercent, packDescription, isAvailable, isLowStock, maxOrderable } from '../../services/pricing'
 
 const props = defineProps<{ product: Product }>()
+const emit = defineEmits<{ edit: [] }>()
 const catalogue = useCatalogueStore()
 const cart = useCartStore()
 const ui = useUiStore()
+const auth = useAuthStore()
 const { config, money } = useClient()
 
 const qty = computed(() => cart.qtyOf(props.product.id))
@@ -23,9 +26,10 @@ const discount = computed(() => discountPercent(props.product))
 const fav = computed(() => catalogue.isFavorite(props.product.id))
 const watching = computed(() => catalogue.isWatching(props.product.id))
 const stockText = computed(() =>
-  !available.value ? 'Tiada stok' : props.product.stock < 10 ? `Baki ${props.product.stock} ${props.product.unit}` : `${props.product.stock} ${props.product.unit} tersedia`,
+  props.product.stock === null ? 'Sentiasa ada' : !available.value ? 'Tiada stok' : isLowStock(props.product) ? `Baki ${props.product.stock} ${props.product.unit}` : `${props.product.stock} ${props.product.unit} tersedia`,
 )
-const dotClass = computed(() => (!available.value ? 'bg-[#e76a50]' : props.product.stock < 10 ? 'bg-[#d29b3a]' : 'bg-[#438660]'))
+const dotClass = computed(() => (!available.value ? 'bg-[#e76a50]' : isLowStock(props.product) ? 'bg-[#d29b3a]' : 'bg-[#438660]'))
+const status = computed(() => 'status' in props.product ? (props.product as ManagedProduct).status : 'active')
 
 function notify(r: { ok: boolean; message?: string }) {
   if (r.message) ui.toast(r.message)
@@ -55,6 +59,15 @@ function toggleWatch() {
     >
       <AppIcon name="heart" class="h-4 w-4" :class="fav ? '[&_path]:fill-[#bc625024]' : ''" />
     </button>
+    <button
+      v-if="auth.canEdit"
+      type="button"
+      class="absolute right-[50px] top-[3px] z-[2] grid h-11 w-11 place-items-center rounded-full border border-[#e8e9df] bg-white/85 text-brand md:right-[51px] md:top-[10px] md:h-9 md:w-9"
+      :aria-label="`Sunting ${product.name}`"
+      @click="emit('edit')"
+    >
+      <AppIcon name="edit" class="h-4 w-4" />
+    </button>
     <div class="px-[11px] pb-[11px] pt-3 md:p-[14px] md:pb-[13px]">
       <div class="text-[7px] font-extrabold uppercase tracking-[.8px] text-[#71816f] md:text-[8px] md:tracking-[1px]">{{ catalogue.categoryName(product.categoryId) }}</div>
       <h3 class="mb-[6px] mt-[5px] min-h-[37px] text-[13px] font-extrabold leading-[1.4]">
@@ -68,6 +81,7 @@ function toggleWatch() {
       <div class="mt-[3px] text-[9px] leading-[1.4] text-[#7f8779] md:text-[10px]">Harga / {{ product.unit }}</div>
       <div class="mt-[10px] flex min-h-[30px] items-center justify-between gap-[6px] border-t border-line pt-[9px] text-[9px] text-[#667563] md:mt-[13px] md:pt-[11px] md:text-[10px]">
         <span class="flex items-center gap-1"><i class="h-1 w-1 rounded-full md:h-[5px] md:w-[5px]" :class="dotClass" />{{ stockText }}</span>
+        <span v-if="auth.canEdit && status !== 'active'" class="chip !min-h-0 !px-2 !py-1">{{ status === 'draft' ? 'Draf' : 'Arkib' }}</span>
       </div>
       <div class="mt-2 flex min-h-[44px] items-center justify-between gap-1 md:mt-[10px] md:min-h-[40px] md:gap-[6px]">
         <template v-if="!available">
@@ -76,7 +90,7 @@ function toggleWatch() {
             {{ watching ? 'Ditandakan' : 'Maklumkan stok' }}
           </button>
         </template>
-        <QtyControl v-else-if="qty" class="w-full" :qty="qty" :max="product.stock" :name="product.name" @increment="notify(cart.increment(product.id))" @decrement="notify(cart.decrement(product.id))" />
+        <QtyControl v-else-if="qty" class="w-full" :qty="qty" :max="maxOrderable(product)" :name="product.name" @increment="notify(cart.increment(product.id))" @decrement="notify(cart.decrement(product.id))" />
         <template v-else>
           <span class="text-[9px] leading-[1.35] text-[#7a8476] md:text-[10px]">Min. {{ product.minimumQuantity }}<br />{{ product.unit }}</span>
           <button type="button" class="min-h-[44px] min-w-[86px] rounded-[9px] bg-brand px-2 text-[10px] font-extrabold text-white hover:bg-brand-dark md:min-h-[39px] md:min-w-[90px] md:px-[13px] md:text-[11px]" :aria-label="`Tambah ${product.name} ke troli`" @click="notify(cart.add(product.id))">+ Tambah</button>

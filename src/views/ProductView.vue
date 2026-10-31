@@ -12,7 +12,7 @@ import { useCartStore } from '../stores/cart'
 import { useUiStore } from '../stores/ui'
 import { useClient } from '../composables/useClient'
 import { useHead } from '../composables/useHead'
-import { unitPrice, priceTiers, packDescription, isAvailable, discountPercent } from '../services/pricing'
+import { unitPrice, priceTiers, packDescription, isAvailable, discountPercent, maxOrderable } from '../services/pricing'
 import { enquiryMessage } from '../services/whatsapp-message'
 
 const route = useRoute()
@@ -75,7 +75,7 @@ function toggleWatch() {
       <del v-if="discount" class="ml-[10px] text-[12px] text-[#819279]">{{ money(product.oldPrice!) }}</del>
     </div>
     <div class="flex items-center gap-[15px] border-y border-line py-3 text-[10px] text-[#687d61] md:text-[11px]">
-      <span class="flex items-center gap-[5px]"><AppIcon name="box" class="h-4 w-4" /> Baki {{ product.stock }} {{ product.unit }}</span>
+      <span class="flex items-center gap-[5px]"><AppIcon name="box" class="h-4 w-4" /> {{ product.stock === null ? 'Sentiasa ada' : `Baki ${product.stock} ${product.unit}` }}</span>
       <span>Min. {{ product.minimumQuantity }} {{ product.unit }}</span>
     </div>
     <h2 class="mb-[10px] mt-[19px] text-[14px] font-extrabold">Harga ikut kuantiti</h2>
@@ -89,7 +89,7 @@ function toggleWatch() {
     <div class="my-3 mt-[18px] flex gap-3">
       <button v-if="!available" type="button" class="btn-secondary w-full" :aria-pressed="watching" @click="toggleWatch"><AppIcon name="bell" />{{ watching ? 'Minat stok ditandakan' : 'Maklumkan apabila ada stok' }}</button>
       <template v-else-if="qty">
-        <QtyControl class="min-w-[135px] md:min-w-[130px]" :qty="qty" :max="product.stock" :name="product.name" @increment="notify(cart.increment(product.id))" @decrement="notify(cart.decrement(product.id))" />
+        <QtyControl class="min-w-[135px] md:min-w-[130px]" :qty="qty" :max="maxOrderable(product)" :name="product.name" @increment="notify(cart.increment(product.id))" @decrement="notify(cart.decrement(product.id))" />
         <RouterLink :to="{ name: 'cart' }" class="btn-primary flex-1 !min-h-[48px]"><AppIcon name="bag" />Lihat troli</RouterLink>
       </template>
       <button v-else type="button" class="btn-primary w-full !min-h-[48px]" @click="notify(cart.add(product.id))">+ Tambah {{ product.minimumQuantity }} {{ product.unit }} ke troli</button>

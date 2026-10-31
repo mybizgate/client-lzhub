@@ -7,3 +7,16 @@ export interface Category {
   active: boolean
   sortOrder?: number
 }
+
+export interface ManagedCategory extends Category {
+  status: 'draft' | 'active' | 'archived'
+  parentId: string | null
+}
+
+export interface CategoryInput {
+  name: string
+  slug?: string
+  description?: string | null
+  sortOrder?: number
+  status?: 'draft' | 'active' | 'archived'
+}

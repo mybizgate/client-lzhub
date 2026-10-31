@@ -9,12 +9,14 @@ import { useClient } from '../composables/useClient'
 import { useCartStore } from '../stores/cart'
 import { useClientStore } from '../stores/client'
 import { useOrderStore } from '../stores/order'
+import { useAuthStore } from '../stores/auth'
 import { whatsappUrl } from '../utils/whatsapp'
 
 const { config, money } = useClient()
 const client = useClientStore()
 const cart = useCartStore()
 const orders = useOrderStore()
+const auth = useAuthStore()
 const route = useRoute()
 
 type NavItem = { name: string; label: string; icon: IconName }
@@ -83,6 +85,7 @@ const helpHref = computed(() => whatsappUrl(config.value.contact.whatsapp ?? '',
           <span>{{ config.shortName }}</span><span>/</span><strong class="text-ink">{{ breadcrumb }}</strong>
         </div>
         <div class="flex items-center gap-[9px] lg:gap-[11px]">
+          <RouterLink v-if="auth.canEdit" :to="{ name: 'account' }" class="chip flex items-center !min-h-[40px] !px-3">Mod edit</RouterLink>
           <RouterLink :to="{ name: 'cart' }" class="icon-btn h-10 w-10 md:h-[41px] md:w-[41px] lg:h-[43px] lg:w-[43px]" aria-label="Buka troli">
             <AppIcon name="bag" />
             <span v-if="cart.count" class="absolute -right-[3px] -top-[3px] grid h-[18px] min-w-[18px] place-items-center rounded-full border-2 border-white bg-[#da713d] text-[9px] font-extrabold text-white">{{ cart.count }}</span>

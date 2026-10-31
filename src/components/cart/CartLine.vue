@@ -6,7 +6,7 @@ import QtyControl from '../common/QtyControl.vue'
 import { useCartStore } from '../../stores/cart'
 import { useUiStore } from '../../stores/ui'
 import { useClient } from '../../composables/useClient'
-import { packDescription } from '../../services/pricing'
+import { maxOrderable, packDescription } from '../../services/pricing'
 
 const props = defineProps<{ entry: CartEntry }>()
 const cart = useCartStore()
@@ -32,7 +32,7 @@ const discountActive = () => props.entry.unitPrice < props.entry.product.price
         </button>
       </div>
       <div class="my-2 flex items-center justify-between gap-[6px] md:gap-2">
-        <QtyControl class="min-w-[116px] md:min-w-[122px]" :qty="entry.qty" :max="entry.product.stock" :name="entry.product.name" @increment="notify(cart.increment(entry.product.id))" @decrement="notify(cart.decrement(entry.product.id))" />
+        <QtyControl class="min-w-[116px] md:min-w-[122px]" :qty="entry.qty" :max="maxOrderable(entry.product)" :name="entry.product.name" @increment="notify(cart.increment(entry.product.id))" @decrement="notify(cart.decrement(entry.product.id))" />
         <div class="text-right">
           <b class="text-[15px] text-brand md:text-[17px]">{{ money(entry.lineTotal) }}</b>
           <small class="block text-[9px] text-muted md:text-[10px]">{{ money(entry.unitPrice) }} / {{ entry.product.unit }}</small>

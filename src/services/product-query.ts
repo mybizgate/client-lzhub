@@ -1,11 +1,12 @@
 import type { Product, ProductQuery } from '../types/product'
+import { hasStock } from './pricing'
 
 /** Pure, side-effect-free filtering/sorting used by local mode and by views after loading. */
 export function applyProductQuery(list: Product[], q: ProductQuery = {}): Product[] {
-  let out = list.filter((p) => p.active)
+  let out = q.includeInactive ? [...list] : list.filter((p) => p.active)
   if (q.categoryId) out = out.filter((p) => p.categoryId === q.categoryId)
   if (q.ids) out = out.filter((p) => q.ids!.includes(p.id))
-  if (q.inStockOnly) out = out.filter((p) => p.stock >= p.minimumQuantity)
+  if (q.inStockOnly) out = out.filter((p) => hasStock(p))
   if (q.promoOnly) out = out.filter((p) => p.promo && !!p.oldPrice && p.oldPrice > p.price)
   if (q.search) {
     const term = q.search.trim().toLowerCase()

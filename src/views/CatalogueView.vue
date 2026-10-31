@@ -9,11 +9,15 @@ import { useCatalogueStore } from '../stores/catalogue'
 import { useClient } from '../composables/useClient'
 import { useHead } from '../composables/useHead'
 import { applyProductQuery } from '../services/product-query'
+import { useAuthStore } from '../stores/auth'
+import { useUiStore } from '../stores/ui'
 
 type Mode = 'all' | 'category' | 'deals' | 'favorites'
 const route = useRoute()
 const router = useRouter()
 const catalogue = useCatalogueStore()
+const auth = useAuthStore()
+const ui = useUiStore()
 const { config } = useClient()
 
 const mode = computed<Mode>(() => (route.meta.mode as Mode) ?? 'all')
@@ -33,16 +37,30 @@ watch(search, (v) => {
 })
 
 const base = computed(() => {
+  if (auth.canEdit && mode.value === 'all') return catalogue.manageableProducts
   if (mode.value === 'deals') return catalogue.promoProducts
   if (mode.value === 'favorites') return catalogue.favoriteProducts
   return catalogue.activeProducts
 })
-const list = computed(() => applyProductQuery(base.value, { categoryId: category.value?.id, search: search.value }))
+const list = computed(() => applyProductQuery(base.value, { categoryId: category.value?.id, search: search.value, includeInactive: auth.canEdit && mode.value === 'all' }))
 const title = computed(() => (mode.value === 'deals' ? 'Promosi untuk kedai anda' : mode.value === 'favorites' ? 'Barang kegemaran' : category.value ? category.value.name : 'Katalog borong'))
 const sectionTitle = computed(() => (mode.value === 'deals' ? 'Harga istimewa' : mode.value === 'favorites' ? 'Kegemaran kedai anda' : category.value ? category.value.name : 'Pilihan untuk kedai anda'))
 const description = computed(() => (mode.value === 'favorites' ? 'Simpan barang yang selalu dipesan.' : 'Harga bagi karton, guni dan pek pukal.'))
 const notFound = computed(() => mode.value === 'category' && catalogue.status === 'ready' && !category.value)
 useHead({ title, description: computed(() => (category.value ? `${category.value.name} borong daripada ${config.value.businessName}.` : undefined)) })
+
+watch(
+  () => auth.canEdit,
+  async (canEdit) => {
+    if (!canEdit) return
+    try {
+      await catalogue.loadManageable()
+    } catch (caught) {
+      ui.toast(caught instanceof Error ? caught.message : 'Produk pengurusan tidak dapat dimuatkan.')
+    }
+  },
+  { immediate: true },
+)
 </script>
 
 <template>

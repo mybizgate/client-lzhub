@@ -28,6 +28,6 @@ const alt = computed(() => (photo.value ? props.product.name : `Ilustrasi produk
     decoding="async"
     width="200"
     height="264"
-    :class="['max-w-full object-contain', photo ? 'h-full w-full p-2' : '', imgClass]"
+    :class="['max-w-full object-contain', photo ? 'p-2' : '', imgClass]"
   />
 </template>

@@ -7,6 +7,7 @@ import { useCatalogueStore } from './catalogue'
 import { useClientStore } from './client'
 import { usePersistedRef } from './persist'
 import { dateISO } from '../utils/date'
+import { hasStock } from '../services/pricing'
 
 const emptyCustomer = (): Customer => ({ storeName: '', contactName: '', phone: '', address: '' })
 
@@ -108,12 +109,12 @@ export const useOrderStore = defineStore('order', () => {
     let adjusted = 0
     for (const item of o.items) {
       const p = catalogue.product(item.productId)
-      if (!p?.active || p.stock < p.minimumQuantity) {
+      if (!p?.active || !hasStock(p)) {
         skipped++
         continue
       }
       const requested = cart.qtyOf(p.id) + Math.max(p.minimumQuantity, item.qty)
-      const qty = Math.min(p.stock, requested)
+      const qty = p.stock === null ? requested : Math.min(p.stock, requested)
       if (qty !== requested) adjusted++
       cart.setQty(p.id, qty)
       added++

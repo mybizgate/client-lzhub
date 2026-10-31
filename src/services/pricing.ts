@@ -25,8 +25,20 @@ export function packDescription(p: Pick<Product, 'packQty' | 'size' | 'unit'>): 
   return `${p.packQty} x ${p.size} / ${p.unit}`
 }
 
+export function hasStock(p: Pick<Product, 'stock' | 'minimumQuantity'>, qty = p.minimumQuantity): boolean {
+  return p.stock === null || p.stock >= qty
+}
+
 export function isAvailable(p: Pick<Product, 'active' | 'stock' | 'minimumQuantity'>): boolean {
-  return p.active && p.stock >= p.minimumQuantity
+  return p.active && hasStock(p)
+}
+
+export function maxOrderable(p: Pick<Product, 'stock'>): number | undefined {
+  return p.stock === null ? undefined : p.stock
+}
+
+export function isLowStock(p: Pick<Product, 'stock'>): boolean {
+  return p.stock !== null && p.stock < 10
 }
 
 /** Tier table for the product detail view: [label, price]. */

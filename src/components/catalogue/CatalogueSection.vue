@@ -1,24 +1,55 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import type { Product, ProductQuery } from '../../types/product'
+import { computed, nextTick, ref, watch } from 'vue'
+import type { ManagedProduct, Product, ProductQuery } from '../../types/product'
 import ProductCard from './ProductCard.vue'
+import AddProductCard from '../manage/AddProductCard.vue'
+import ProductEditorCard from '../manage/ProductEditorCard.vue'
 import EmptyState from '../common/EmptyState.vue'
 import { applyProductQuery } from '../../services/product-query'
 import { useClient } from '../../composables/useClient'
 import { useCatalogueStore } from '../../stores/catalogue'
+import { useAuthStore } from '../../stores/auth'
 
 const props = defineProps<{ products: Product[]; title: string; loading?: boolean; emptyTitle?: string; emptyText?: string }>()
 const { config } = useClient()
 const catalogue = useCatalogueStore()
+const auth = useAuthStore()
 const inStockOnly = ref(false)
 const sort = ref<NonNullable<ProductQuery['sort']>>('popular')
-const list = computed(() => applyProductQuery(props.products, { inStockOnly: inStockOnly.value, sort: sort.value }))
+const editing = ref<string | 'new' | null>(null)
+const list = computed(() => applyProductQuery(props.products, { inStockOnly: inStockOnly.value, sort: sort.value, includeInactive: auth.canEdit }))
 const sorts: [ProductQuery['sort'], string][] = [
   ['popular', 'Pilihan kami'],
   ['price_asc', 'Harga terendah'],
   ['price_desc', 'Harga tertinggi'],
   ['name', 'Nama A-Z'],
 ]
+
+watch(
+  () => auth.canEdit,
+  (canEdit) => {
+    if (!canEdit) editing.value = null
+  },
+)
+
+async function openEditor(id: string | 'new') {
+  editing.value = id
+  await nextTick()
+  document.querySelector<HTMLElement>('[data-product-editor]')?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+}
+
+function asManaged(product: Product): ManagedProduct {
+  if ('status' in product) return product as ManagedProduct
+  return {
+    ...product,
+    status: product.active ? 'active' : 'draft',
+    sortOrder: 0,
+    stockQuantity: product.stock ?? 0,
+    unlimitedStock: product.stock === null,
+    lowStockThreshold: 10,
+    featured: Boolean(product.featured),
+  }
+}
 </script>
 
 <template>
@@ -44,8 +75,13 @@ const sorts: [ProductQuery['sort'], string][] = [
     <div v-else-if="loading" class="grid grid-cols-2 gap-[11px] md:grid-cols-3 md:gap-[13px] xl:grid-cols-4 xl:gap-[15px]">
       <div v-for="i in 8" :key="i" class="h-[330px] animate-pulse rounded-2xl border border-line bg-white" />
     </div>
-    <div v-else-if="list.length" class="grid grid-cols-2 gap-[11px] md:grid-cols-3 md:gap-[13px] xl:grid-cols-4 xl:gap-[15px]">
-      <ProductCard v-for="p in list" :key="p.id" :product="p" />
+    <div v-else-if="list.length || auth.canEdit" class="grid grid-cols-2 gap-[11px] md:grid-cols-3 md:gap-[13px] xl:grid-cols-4 xl:gap-[15px]">
+      <ProductEditorCard v-if="auth.canEdit && editing === 'new'" key="editor-new" @saved="editing = null" @cancel="editing = null" />
+      <AddProductCard v-else-if="auth.canEdit" key="add-product" @add="openEditor('new')" />
+      <template v-for="p in list" :key="p.id">
+        <ProductEditorCard v-if="auth.canEdit && editing === p.id" :product="asManaged(p)" @saved="editing = null" @cancel="editing = null" />
+        <ProductCard v-else :product="p" @edit="openEditor(p.id)" />
+      </template>
     </div>
     <EmptyState v-else :title="emptyTitle ?? 'Tiada produk ditemui'" :description="emptyText ?? 'Cuba kategori atau carian lain.'">
       <slot name="empty" />

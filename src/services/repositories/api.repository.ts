@@ -18,16 +18,18 @@ import type { Category } from '../../types/category'
 import type { ClientConfig } from '../../types/client'
 import type { Product, ProductQuery } from '../../types/product'
 import type { Customer, Order, OrderDraft, OrderStatus } from '../../types/order'
-import type { HttpClient } from '../http'
+import { HttpError, type HttpClient } from '../http'
+import { setGuestToken } from '../session'
 import type { CatalogueRepository } from './catalogue.repository'
 import type { OrderRepository } from './order.repository'
 import type { CustomerRepository } from './customer.repository'
 import type { ClientRepository } from './client.repository'
 
-type Envelope<T> = { data: T } | T
+type Envelope<T> = { data: T }
+type GuestEnvelope<T> = Envelope<T> & { guestToken?: string }
 
 function unwrap<T>(res: Envelope<T>): T {
-  return res && typeof res === 'object' && 'data' in (res as object) ? (res as { data: T }).data : (res as T)
+  return res.data
 }
 
 export class ApiCatalogueRepository implements CatalogueRepository {
@@ -63,7 +65,12 @@ export class ApiCatalogueRepository implements CatalogueRepository {
 export class ApiOrderRepository implements OrderRepository {
   constructor(private readonly http: HttpClient) {}
   async list(): Promise<Order[]> {
-    return unwrap(await this.http.get<Envelope<Order[]>>('/orders'))
+    try {
+      return unwrap(await this.http.get<Envelope<Order[]>>('/orders'))
+    } catch (error) {
+      if (error instanceof HttpError && error.status === 401) return []
+      throw error
+    }
   }
   async get(id: string): Promise<Order | null> {
     try {
@@ -74,7 +81,9 @@ export class ApiOrderRepository implements OrderRepository {
     }
   }
   async create(draft: OrderDraft): Promise<Order> {
-    return unwrap(await this.http.post<Envelope<Order>>('/orders', draft))
+    const response = await this.http.post<GuestEnvelope<Order>>('/orders', draft)
+    if (response.guestToken) setGuestToken(response.guestToken)
+    return response.data
   }
   async updateStatus(id: string, status: OrderStatus): Promise<Order> {
     return unwrap(await this.http.patch<Envelope<Order>>(`/orders/${encodeURIComponent(id)}/status`, { status }))
@@ -92,7 +101,9 @@ export class ApiCustomerRepository implements CustomerRepository {
     }
   }
   async saveProfile(customer: Customer): Promise<Customer> {
-    return unwrap(await this.http.put<Envelope<Customer>>('/customer/profile', customer))
+    const response = await this.http.put<GuestEnvelope<Customer>>('/customer/profile', customer)
+    if (response.guestToken) setGuestToken(response.guestToken)
+    return response.data
   }
 }
 
@@ -105,7 +116,15 @@ export class ApiClientRepository implements ClientRepository {
   async getConfig(): Promise<ClientConfig> {
     try {
       const remote = unwrap(await this.http.get<Envelope<Partial<ClientConfig>>>('/client/config'))
-      return { ...this.fallback, ...remote, contact: { ...this.fallback.contact, ...remote.contact }, ordering: { ...this.fallback.ordering, ...remote.ordering } }
+      const paymentOptions = remote.ordering?.paymentOptions?.length
+        ? remote.ordering.paymentOptions
+        : this.fallback.ordering.paymentOptions
+      return {
+        ...this.fallback,
+        ...remote,
+        contact: { ...this.fallback.contact, ...remote.contact },
+        ordering: { ...this.fallback.ordering, ...remote.ordering, paymentOptions },
+      }
     } catch {
       return this.fallback
     }

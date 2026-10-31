@@ -68,6 +68,13 @@ validation, checkout with saved store profile, order history, re-order, "mark as
 cancel, copy order text, and WhatsApp hand-off of the order message. Seed data is in
 `src/data/seed/`. Refreshing the page keeps the cart, favourites, profile and draft order.
 
+### Pengurusan (edit mode)
+
+Open `/login` and use `pemilik@lzhub.test` with password `demo` in local mode. The owner can
+toggle **Mod edit** from the account page, then add or edit products and categories directly
+in the catalogue. Local products, categories and the management session persist in the same
+client-namespaced browser storage as the customer prototype data.
+
 ## API mode (`VITE_DATA_MODE=api`)
 
 Switching the flag makes the same stores use `Api*Repository` against `VITE_API_BASE_URL`.
@@ -76,9 +83,10 @@ The expected REST contract is documented at the top of
 `/customer/profile`, `/client/config`). If the client config endpoint is unreachable the
 static config is used, so the shell still renders.
 
-Authentication is prepared but not implemented: `http.setTokenProvider()` attaches a bearer
-token; customer/staff login screens and role checks can be added as new routes and a store
-without restructuring.
+Guest and owner/staff tokens are persisted through the storage service. The API mode includes
+the `/login` management route and consumes `/auth/*`, `/manage/*`, customer and attachment
+endpoints according to `docs/shop/API_CONTRACT.md`; the backend remains responsible for every
+tenant and role authorisation check.
 
 ## Client configuration
 

@@ -4,6 +4,7 @@ import type { Product } from '../types/product'
 import { useCatalogueStore } from './catalogue'
 import { useClientStore } from './client'
 import { unitPrice, deliveryFee as feeFor } from '../services/pricing'
+import { hasStock } from '../services/pricing'
 import { usePersistedRef } from './persist'
 
 export interface CartEntry {
@@ -41,7 +42,7 @@ export const useCartStore = defineStore('cart', () => {
   const remainingToMinimum = computed(() => Math.max(0, ordering.value.minimumOrder - subtotal.value))
   const issues = computed(() =>
     entries.value
-      .filter((e) => !e.product.active || e.product.stock < e.qty || e.qty < e.product.minimumQuantity)
+      .filter((e) => !e.product.active || !hasStock(e.product, e.qty) || e.qty < e.product.minimumQuantity)
       .map((e) =>
         !e.product.active
           ? `${e.product.name}: produk tidak tersedia`
@@ -65,13 +66,13 @@ export const useCartStore = defineStore('cart', () => {
     const p = catalogue.product(id)
     if (!p?.active) return { ok: false, message: 'Produk tidak tersedia.' }
     const current = qtyOf(id)
-    if (delta > 0 && p.stock < p.minimumQuantity) return { ok: false, message: 'Stok belum mencukupi untuk pesanan minimum.' }
+    if (delta > 0 && !hasStock(p)) return { ok: false, message: 'Stok belum mencukupi untuk pesanan minimum.' }
     const next = current === 0 ? p.minimumQuantity : current + delta
     if (next < p.minimumQuantity) {
       remove(id)
       return { ok: true }
     }
-    if (next > p.stock) return { ok: false, message: `Maksimum ${p.stock} ${p.unit} tersedia.` }
+    if (p.stock !== null && next > p.stock) return { ok: false, message: `Maksimum ${p.stock} ${p.unit} tersedia.` }
     lines.value = { ...lines.value, [id]: next }
     return { ok: true, message: current === 0 && delta > 0 ? `${p.minimumQuantity} ${p.unit} ditambah ke troli.` : undefined }
   }
@@ -87,7 +88,7 @@ export const useCartStore = defineStore('cart', () => {
   function setQty(id: string, qty: number) {
     const p = catalogue.product(id)
     if (!p) return
-    const clamped = Math.min(p.stock, Math.max(p.minimumQuantity, qty))
+    const clamped = p.stock === null ? Math.max(p.minimumQuantity, qty) : Math.min(p.stock, Math.max(p.minimumQuantity, qty))
     lines.value = { ...lines.value, [id]: clamped }
   }
   function remove(id: string) {
@@ -103,8 +104,8 @@ export const useCartStore = defineStore('cart', () => {
     const next: Lines = {}
     for (const [id, qty] of Object.entries(lines.value)) {
       const p = catalogue.product(id)
-      if (!p?.active || p.stock < p.minimumQuantity) continue
-      next[id] = Math.min(p.stock, Math.max(p.minimumQuantity, qty))
+      if (!p?.active || !hasStock(p)) continue
+      next[id] = p.stock === null ? Math.max(p.minimumQuantity, qty) : Math.min(p.stock, Math.max(p.minimumQuantity, qty))
     }
     lines.value = next
   }

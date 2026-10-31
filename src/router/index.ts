@@ -14,6 +14,9 @@ export const router = createRouter({
     { path: '/orders', name: 'orders', component: () => import('../views/OrdersView.vue') },
     { path: '/orders/:id', name: 'order', component: () => import('../views/OrderDetailView.vue') },
     { path: '/account', name: 'account', component: () => import('../views/AccountView.vue') },
+    { path: '/login', name: 'login', component: () => import('../views/LoginView.vue') },
+    { path: '/forgot-password', name: 'forgot-password', component: () => import('../views/ForgotPasswordView.vue') },
+    { path: '/reset-password', name: 'reset-password', component: () => import('../views/ResetPasswordView.vue') },
     {
       path: '/api-test',
       name: 'api-test',

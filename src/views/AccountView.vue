@@ -11,13 +11,15 @@ import { useClient } from '../composables/useClient'
 import { useHead } from '../composables/useHead'
 import { validateCustomer } from '../services/order.service'
 import { enquiryMessage } from '../services/whatsapp-message'
+import { useAuthStore } from '../stores/auth'
 
 const orders = useOrderStore()
 const ui = useUiStore()
+const auth = useAuthStore()
 const { config } = useClient()
 useHead({ title: 'Akaun kedai' })
 
-const form = reactive<Customer>({ storeName: '', contactName: '', phone: '', address: '' })
+let form = reactive<Customer>({ storeName: '', contactName: '', phone: '', address: '' })
 const error = ref('')
 onMounted(async () => {
   await orders.loadProfile()
@@ -34,6 +36,7 @@ async function save() {
   ui.toast('Maklumat kedai disimpan.')
 }
 const tel = (p: string) => `tel:${p.replace(/[^+\d]/g, '')}`
+const roleLabel = () => auth.user?.role === 'owner' ? 'Pemilik' : 'Staf'
 </script>
 
 <template>
@@ -65,4 +68,19 @@ const tel = (p: string) => `tel:${p.replace(/[^+\d]/g, '')}`
       </section>
     </div>
   </div>
+  <section class="panel mt-[18px] md:mt-[22px]">
+    <h3 class="mb-3 text-[15px] font-extrabold">Pengurusan kedai</h3>
+    <template v-if="!auth.user">
+      <p class="mb-4 text-[12px] text-muted">Untuk pemilik dan staf.</p>
+      <RouterLink :to="{ name: 'login' }" class="btn-secondary"><AppIcon name="store" />Log masuk pengurusan</RouterLink>
+    </template>
+    <template v-else>
+      <p class="text-[12px] leading-[1.7] text-muted"><strong class="text-ink">{{ auth.user.name }}</strong><br />{{ roleLabel() }} &bull; {{ auth.user.email }}</p>
+      <label class="check-label mt-4">
+        <input v-model="auth.editMode" type="checkbox" />
+        <span><strong class="block text-ink">Mod edit</strong><small class="text-muted">Tambah dan sunting produk terus dalam katalog.</small></span>
+      </label>
+      <button type="button" class="btn-ghost" @click="auth.logout"><AppIcon name="close" />Log keluar</button>
+    </template>
+  </section>
 </template>

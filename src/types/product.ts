@@ -27,7 +27,8 @@ export interface Product {
   /** Previous price in cents when a promotion is running. */
   oldPrice?: number
   minimumQuantity: number
-  stock: number
+  /** Available wholesale units, or `null` when stock is unlimited. */
+  stock: number | null
   stockStatus: StockStatus
   featured?: boolean
   promo?: boolean
@@ -37,6 +38,35 @@ export interface Product {
   updatedAt?: string
 }
 
+export interface ManagedProduct extends Product {
+  status: 'draft' | 'active' | 'archived'
+  sortOrder: number
+  stockQuantity: number
+  unlimitedStock: boolean
+  lowStockThreshold: number
+  featured: boolean
+}
+
+export interface ProductInput {
+  categoryId: string
+  name: string
+  slug?: string
+  sku?: string | null
+  description?: string | null
+  brand?: string | null
+  unit: string
+  packQty: number
+  size: string
+  price: number
+  oldPrice?: number | null
+  minimumQuantity: number
+  stockQuantity: number
+  unlimitedStock: boolean
+  status: 'draft' | 'active' | 'archived'
+  sortOrder?: number
+  featured?: boolean
+}
+
 export interface ProductQuery {
   categoryId?: string
   search?: string
@@ -44,4 +74,6 @@ export interface ProductQuery {
   promoOnly?: boolean
   ids?: string[]
   sort?: 'popular' | 'price_asc' | 'price_desc' | 'name'
+  /** Local view-only switch used by authenticated catalogue management. */
+  includeInactive?: boolean
 }

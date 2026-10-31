@@ -4,6 +4,7 @@ import App from './App.vue'
 import { router } from './router'
 import { useClientStore } from './stores/client'
 import { useCatalogueStore } from './stores/catalogue'
+import { useAuthStore } from './stores/auth'
 import './assets/css/main.css'
 
 const app = createApp(App)
@@ -16,5 +17,6 @@ const client = useClientStore(pinia)
 client.applyTheme()
 void client.init()
 void useCatalogueStore(pinia).load()
+void useAuthStore(pinia).restore()
 
 app.mount('#app')
